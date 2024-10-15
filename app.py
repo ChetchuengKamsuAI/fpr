@@ -1,4 +1,8 @@
 import streamlit as st
+import pickle
+import sqlite3
+import hashlib
+from pathlib import Path
 from PIL import Image
 import sqlite3
 import requests
@@ -11,9 +15,15 @@ import time
 import smtplib
 from email.mime.text import MIMEText
 from streamlit_folium import folium_static
-# Couleurs et style
-st.set_page_config(page_title="EcoTrace", layout="wide", initial_sidebar_state="expanded")
+from streamlit_option_menu import option_menu
+import streamlit_authenticator as stauth  # pip install streamlit-authenticator
 
+
+# Couleurs et style
+st.set_page_config(page_title="EcoTrace", layout="wide",page_icon="🌍", initial_sidebar_state="expanded")
+
+#______________________________#_________________________________________________________________________________#_____
+#______________KAMS_______PATCELEST TECHNOLOGIE___________________________#_____________________________   
 #---------------------------------------------------------#
 
 # Fonction pour récupérer les actualités via l'API Mediastack en fonction d'un mot-clé
@@ -28,38 +38,26 @@ def get_climate_news(keyword):
         return None
 
 # CSS pour le style du logo (alignement et taille)
-st.markdown("""
-    <style>
-    .logo-container {
-        display: flex;
-        align-items: left;
-        justify-content: left;
-        margin-bottom: 20px;
-    }
-    .logo-container img {
-        width: 150px;  /* Ajuste la taille ici */
-        height: auto;
-    }
-    </style>
-    """, unsafe_allow_html=True)
+
 
 # Onglet Accueil avec le logo animé
 def display_accueil():
-    # Afficher le logo animé à gauche
-    st.markdown("""
-    <div class="logo-container">
-        <img src="C:/Users/patrick/Downloads/Ecotrace_web/logo.gif" alt="EcoTrace Logo">
-    </div>
-    """, unsafe_allow_html=True)
+    # Afficher le logo animé centré et avec une taille réduite
+    st.markdown(
+        """
+        <div style="text-align: center;">
+            <img src="https://th.bing.com/th/id/R.df615935451a84229456c1144952206d?rik=rBwfA1agi3ANzw&pid=ImgRaw&r=0" width="200" />
+        </div>
+        """, unsafe_allow_html=True
+    )
 
     # Contenu principal de l'accueil
     st.title("Bienvenue sur EcoTrace")
     st.write("""
-        **EcoTrace** est une plateforme numérique innovante qui simplifie la gestion des déchets recyclables  au Cameroun. 
+        **EcoTrace** est une plateforme numérique innovante qui simplifie la gestion des déchets recyclables au Cameroun. 
         En facilitant le recyclage et la réduction des déchets, EcoTrace contribue à un environnement plus propre et à une économie verte durable. 
         Les utilisateurs peuvent non seulement signaler leurs déchets, mais aussi suivre leur collecte en temps réel et gagner des récompenses pour leur participation active.
     """)
-
     # Section Recherche des actualités sur la Justice Climatique
     st.subheader("Recherchez des actualités sur la Justice Climatique")
     
@@ -120,7 +118,7 @@ def display_signal_dechets():
     with st.form("report_form"):
         type_dechets = st.selectbox("Type de Déchets", ["Plastique", "Verre", "Métal", "Papier", "Autre"])
         quantite = st.number_input("Quantité", min_value=1, placeholder="Entrez la quantité de déchets")
-        description = st.text_area("Description", placeholder="Décrivez les déchets signalés et votre numero money")
+        description = st.text_area("Description et Numero de Téléphone", placeholder="Décrivez les déchets signalés et votre numero money")
         adresse = st.text_input("Votre Adresse", placeholder="Entrez votre adresse  ici")
         
         submit_button = st.form_submit_button("Signaler")
@@ -221,42 +219,43 @@ def display_suivi_collecte():
 conn = sqlite3.connect('ecotrace.db')
 cursor = conn.cursor()
 
-# Fonction pour afficher les récompenses d'un utilisateur
-def afficher_recompenses(utilisateur):
-    # Requête pour récupérer les récompenses depuis la table 'rewards'
-    cursor.execute('SELECT * FROM rewards WHERE utilisateur=?', (utilisateur,))
+
+# Fonction pour afficher les récompenses d'un utilisateur via son numéro de téléphone
+def afficher_recompenses_par_telephone(telephone):
+    # Requête pour récupérer les récompenses depuis la table 'rewards' en fonction du numéro de téléphone
+    cursor.execute('SELECT * FROM rewards WHERE telephone=?', (telephone,))
     recompenses = cursor.fetchall()
-    
+
     if recompenses:
-        st.subheader(f"🎉 Récompenses pour {utilisateur} 🎉")
-        
+        st.subheader(f"🎉 Récompenses pour le numéro {telephone} 🎉")
+
         # Animation simulée lors de l'affichage des récompenses
         progress_bar = st.progress(0)
         for index, recompense in enumerate(recompenses):
             progress = (index + 1) / len(recompenses)
             time.sleep(0.5)  # Simuler un délai pour l'animation
             progress_bar.progress(int(progress * 100))
-            
+
             st.write(f"🏅 **Récompense ID**: {recompense[0]}")
-            st.write(f"⭐ **Points**: {recompense[2]}")
-            st.write(f"💵 **Montant (FCFA)**: {recompense[3]}")
+            st.write(f"⭐ **Points**: {recompense[3]}")
+            st.write(f"💵 **Montant (FCFA)**: {recompense[5]}")
             st.write(f"💬 **Description**: {recompense[4]}")
             st.write("———")
-        
+
         progress_bar.empty()  # Supprimer la barre de progression une fois terminé
     else:
-        st.write(f"❌ Aucune récompense trouvée pour **{utilisateur}**.")
+        st.write(f"❌ Aucune récompense trouvée pour le numéro **{telephone}**.")
 
 # Onglet Récompenses
 def display_recompenses():
     st.title("🏆 Récompenses")
 
-    # Sélection de l'utilisateur pour voir ses récompenses
-    utilisateur = st.text_input("🔍 Entrez votre nom d'utilisateur pour consulter vos récompenses")
+    # Sélection du numéro de téléphone pour voir ses récompenses
+    telephone = st.text_input("🔍 Entrez votre numéro de téléphone pour consulter vos récompenses")
     
-    if utilisateur:
-        afficher_recompenses(utilisateur)
-    
+    if telephone:
+        afficher_recompenses_par_telephone(telephone)
+
     st.subheader("💡 Comment gagner des récompenses ?")
     st.write("""
     - 🗑️ **Signaler des déchets** : Chaque fois que vous signalez des déchets collectés, vous gagnez des points.
@@ -339,13 +338,13 @@ def envoyer_email(nom, email, message):
         # Configuration de l'email
         msg = MIMEText(f"Nom: {nom}\nEmail: {email}\nMessage: {message}")
         msg['Subject'] = 'Nouveau message de support'
-        msg['From'] = 'votre_email@example.com'  # Remplacez par votre adresse email
+        msg['From'] = 'patcelest237@gmail.com'  # Remplacez par votre adresse email
         msg['To'] = email  # Adresse email de l'utilisateur qui a soumis le formulaire
 
         # Connexion au serveur SMTP
         with smtplib.SMTP('smtp.example.com', 587) as server:  # Remplacez par votre serveur SMTP
             server.starttls()
-            server.login('votre_email@example.com', 'votre_mot_de_passe')  # Authentifiez-vous
+            server.login('patcelest237@gmail.com', 'Patcelest@237')  # Authentifiez-vous
             server.send_message(msg)
 
         return True
@@ -425,8 +424,11 @@ st.markdown("""
 
 
 # Onglets principaux
-tabs = ["Accueil", "Signaler des Déchets", "Suivi de la Collecte", "Récompenses", "Statistiques et Analyses", "Contact et Assistance"]
-page = st.sidebar.selectbox("Navigation", tabs)
+with st.sidebar:
+    page = option_menu("🌍EcoTrace", ["Accueil", 'Signaler des Déchets','Suivi de la Collecte','Récompenses','Statistiques et Analyses','Contact et Assistance'], 
+        icons=['house', 'trash','map','gift','cast','signal'], menu_icon="cast", default_index=1)
+    page
+
 
 # Accueil
 if page == "Accueil":

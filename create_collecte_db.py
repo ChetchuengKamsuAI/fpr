@@ -18,11 +18,12 @@ CREATE TABLE IF NOT EXISTS collecte_dechets (
 )
 ''')
 
-# Création de la table rewards (récompenses)
+# Création de la table rewards (récompenses) avec un champ téléphone
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS rewards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     utilisateur TEXT,
+    telephone TEXT,
     points INTEGER,
     description TEXT,
     montant_fcfa REAL
@@ -46,38 +47,38 @@ cursor.executemany('''
     VALUES (?, ?, ?, ?, ?, ?, ?)
 ''', collecte_data)
 
-# Insérer des enregistrements dans la table rewards avec des noms Camerounais et des montants en FCFA
+# Insérer des enregistrements dans la table rewards avec des noms Camerounais, numéros de téléphone et montants en FCFA
 rewards_data = [
-    ("Emmanuel Fokou", 120, "Récompense pour signalement de déchets plastiques", 5000),
-    ("Marie Tchameni", 150, "Récompense pour collecte de verre", 7000),
-    ("Roger Abessolo", 200, "Récompense pour participation à la collecte de métal", 10000),
-    ("Esther Nkoum", 180, "Récompense spéciale pour papier", 8500),
-    ("Jean-Pierre Ngono", 90, "Récompense pour signalement de déchets organiques", 3000),
-    ("Valerie Ntsama", 130, "Récompense pour signalement de déchets plastiques", 5500),
-    ("Benoit Ebogo", 170, "Récompense pour participation à la collecte de verre", 9500),
-    ("Chantal Mengue", 220, "Récompense pour collecte de métal", 11000),
-    ("Cyrille Mvondo", 240, "Récompense pour signalement dans une zone à forte densité", 12500),
-    ("Joëlle Kotto", 160, "Récompense pour signalement de plastique et métal", 8000),
-    ("Pauline Titi", 140, "Récompense pour signalement de déchets divers", 6000),
-    ("Armand Djoumessi", 210, "Récompense pour collecte de papier", 10500),
-    ("Lionel Owona", 190, "Récompense pour participation dans plusieurs zones", 9500),
-    ("Nathalie Ayissi", 100, "Récompense pour signalement de verre", 4500),
-    ("Christian Tchatchoua", 180, "Récompense pour collecte de métal", 8500),
-    ("Veronique Ateba", 170, "Récompense pour participation à une campagne de sensibilisation", 9000),
-    ("Fabrice Mekoulou", 160, "Récompense pour collecte de plastique", 7500),
-    ("Mireille Effa", 140, "Récompense pour signalement de déchets organiques", 6000),
-    ("Josephine Mbarga", 130, "Récompense pour participation à une collecte de verre", 5500),
-    ("Alain Mveng", 150, "Récompense pour signalement de déchets dans une zone prioritaire", 7000)
+    ("Emmanuel Fokou", "678123456", 120, "Récompense pour signalement de déchets plastiques", 5000),
+    ("Marie Tchameni", "678987654", 150, "Récompense pour collecte de verre", 7000),
+    ("Roger Abessolo", "678654321", 200, "Récompense pour participation à la collecte de métal", 10000),
+    ("Esther Nkoum", "678321987", 180, "Récompense spéciale pour papier", 8500),
+    ("Jean-Pierre Ngono", "678741258", 90, "Récompense pour signalement de déchets organiques", 3000),
+    ("Valerie Ntsama", "678963852", 130, "Récompense pour signalement de déchets plastiques", 5500),
+    ("Benoit Ebogo", "678741963", 170, "Récompense pour participation à la collecte de verre", 9500),
+    ("Chantal Mengue", "678852147", 220, "Récompense pour collecte de métal", 11000),
+    ("Cyrille Mvondo", "678951753", 240, "Récompense pour signalement dans une zone à forte densité", 12500),
+    ("Joëlle Kotto", "678753951", 160, "Récompense pour signalement de plastique et métal", 8000),
+    ("Pauline Titi", "678123789", 140, "Récompense pour signalement de déchets divers", 6000),
+    ("Armand Djoumessi", "678321456", 210, "Récompense pour collecte de papier", 10500),
+    ("Lionel Owona", "678654789", 190, "Récompense pour participation dans plusieurs zones", 9500),
+    ("Nathalie Ayissi", "678987321", 100, "Récompense pour signalement de verre", 4500),
+    ("Christian Tchatchoua", "678123963", 180, "Récompense pour collecte de métal", 8500),
+    ("Veronique Ateba", "678963741", 170, "Récompense pour participation à une campagne de sensibilisation", 9000),
+    ("Fabrice Mekoulou", "678852963", 160, "Récompense pour collecte de plastique", 7500),
+    ("Mireille Effa", "678321753", 140, "Récompense pour signalement de déchets organiques", 6000),
+    ("Josephine Mbarga", "678951852", 130, "Récompense pour participation à une collecte de verre", 5500),
+    ("Alain Mveng", "678753852", 150, "Récompense pour signalement de déchets dans une zone prioritaire", 7000)
 ]
 
 # Exécution de l'insertion des données de récompenses
 cursor.executemany('''
-    INSERT INTO rewards (utilisateur, points, description, montant_fcfa)
-    VALUES (?, ?, ?, ?)
+    INSERT INTO rewards (utilisateur, telephone, points, description, montant_fcfa)
+    VALUES (?, ?, ?, ?, ?)
 ''', rewards_data)
 
 # Sauvegarde des changements et fermeture de la connexion
 conn.commit()
 conn.close()
 
-print("La base de données ecotrace.db a été créée avec 7 enregistrements de collecte de déchets et 20 enregistrements de récompenses.")
+print("La base de données ecotrace.db a été mise à jour avec le champ 'telephone' dans la table rewards.")
