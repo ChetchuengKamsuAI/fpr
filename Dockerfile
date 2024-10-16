@@ -10,14 +10,20 @@ COPY . /app
 # Upgrade pip to the latest version to avoid the warning
 RUN python -m pip install --upgrade pip
 
-# Install the dependencies listed in requirements.txt
-RUN pip install -r requirements.txt
+# Install virtualenv to create a virtual environment
+RUN pip install virtualenv
 
-# Ensure the necessary port (commonly 8000) is exposed for web traffic
-EXPOSE 8000
+# Create a virtual environment
+RUN virtualenv venv
 
-# Set environment variable for the port, default to 8000 if not set
-ENV PORT 8000
+# Install the dependencies listed in requirements.txt within the virtual environment
+RUN ./venv/bin/pip install -r requirements.txt
 
-# Define the entry point for the container to run your app (update if needed)
-CMD ["python", "login.py"]
+# Ensure the necessary port (commonly 8501 for Streamlit) is exposed for web traffic
+EXPOSE 8501
+
+# Set environment variable for the port, default to 8501 if not set
+ENV PORT 8501
+
+# Define the entry point for the container to run your Streamlit app
+CMD ["./venv/bin/streamlit", "run", "login.py", "--server.port", "8501", "--server.address", "0.0.0.0"]
